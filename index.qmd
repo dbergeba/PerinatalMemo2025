@@ -1,0 +1,15 @@
+---
+title: "index"
+format: html
+editor: visual
+---
+
+
+# Sessió anual Psiquiatría Perinatal
+
+26 de Març 2026
+
+1. [Introducció i Dades generals, 30 min](Step2_getdataFOR_anualMemories2025_QuarPresent.qmd)
+2. Dades grup postpart, 10 min
+3. Resum recursos comunitaris, 15 min
+4. [Objectius i Estratègia 2026]()

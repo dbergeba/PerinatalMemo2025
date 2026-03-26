@@ -1,0 +1,751 @@
+---
+title: "Memòria anual Salut Mental Perinatal Hospital del Mar"
+author: ""
+date: "Març 2026"
+format: 
+ revealjs:
+  self-contained: false 
+  theme: default
+  transition: slide
+  scrollable: true
+  chalkboard: true
+  include-in-header:
+      - text: |
+          <style>
+          .reveal h1, .reveal h2 {
+            color: #ff5733 !important;
+          }
+          </style>
+editor: visual
+toc: TRUE
+toc-expand: 1
+toc-depth: 1
+toc-title: "Contingut"
+fixed: true
+include-in-header: 
+  text: |
+    <style>
+      .tiny-table table {
+      font-size: 0.4em;
+      line-height: 0.9em
+      }
+    </style>
+     <style>
+      .small-table table {
+      font-size: 0.6em;
+      line-height: 1.2em
+      }
+    </style>
+#| cache: false
+
+---
+
+```{r setup, include=FALSE}
+rm(list=ls())
+graphics.off()
+knitr::opts_chunk$set(echo = TRUE)
+setwd('/home/dbergeba/docsdani/Perinatal/Memories/2025')
+```
+
+```{r, include=FALSE}
+# This script is set to build anual memories and other data related to the perinatal psychiatry program
+
+
+if (Sys.info()['nodename']=="dbergeba-HP-ProDesk-600-G1-TWRxx") {
+  mainpath<-'/home/dbergeba/Documents/'
+} else if (Sys.info()['nodename']=="dbergeba-OptiPlex-7020") {
+  mainpath<-'/home/dbergeba/docsdani/'
+} else {
+  mainpath<-'/home/dbergeba/docsdani/'
+}
+
+mainpatho<-mainpath
+
+library(ggplot2)
+library(tidyverse)
+library(scales)
+```
+
+```{r include=FALSE}
+# Load the data
+load("docs/Perinatal_data_allyJan2026.RData")
+mainpath<-mainpatho
+any=2025 # canviar aquí l'any de la memòria
+data<-data[data$year<(any+1),]
+
+# Aquest és el segon full de l'excel que passa la Lourdes, on estan les visites que sí han vingut, el full 3 seria les que no, i el 1 els totals per nhc.
+anyp=2025
+
+admdata<-readxl::read_excel(paste0("Perinatal ",anyp,".xlsx"), sheet=1)
+
+# admdata$video<-ifelse(admdata$`Tipus visita`== 20 | admdata$`Tipus visita`== 21,1,0)
+# admdata$telf<-ifelse(admdata$`Tipus visita`==50 | admdata$`Tipus visita`== 94,1,0)
+# admdata$grup<-ifelse(admdata$`Tipus visita`==494,1,0)
+# admdata$succpres<-ifelse(admdata$`Tipus visita`==10,1,0)
+# admdata$prim<-ifelse(admdata$`Tipus visita`==494,1,0)
+admdata$tipusvis<-ifelse(admdata$`TIP.VISITA`== 20,"Videoconsulta",
+                         ifelse(admdata$`TIP.VISITA`==50 | admdata$`TIP.VISITA`== 94,"telefònnica",
+                                ifelse(admdata$TIP.VISITA==494,"grupal",
+                                       ifelse(admdata$`TIP.VISITA`==10,"succ presen",
+                                              ifelse(admdata$`TIP.VISITA`==100 | admdata$`TIP.VISITA`== 21,"primera",0)))))
+
+admdata$video<-ifelse(admdata$`TIP.VISITA`== 20,1,0)
+admdata$telf<-ifelse(admdata$`TIP.VISITA`==50 | admdata$`TIP.VISITA`== 94,1,0)
+admdata$grup<-ifelse(admdata$TIP.VISITA==494,1,0)
+admdata$succpres<-ifelse(admdata$`TIP.VISITA`==10,1,0)
+admdata$prim<-ifelse(admdata$`TIP.VISITA`==100 | admdata$`TIP.VISITA`== 21,1,0)
+
+admdata$videoSi<-ifelse(admdata$`TIP.VISITA`== 20 & admdata$`VISTAT?`=="S",1,0)
+admdata$telfSi<-ifelse((admdata$`TIP.VISITA`==50 | admdata$`TIP.VISITA`== 94)  & admdata$`VISTAT?`=="S",1,0)
+admdata$grupSi<-ifelse(admdata$TIP.VISITA==494 & admdata$`VISTAT?`=="S",1,0)
+admdata$succpresSi<-ifelse(admdata$`TIP.VISITA`==10 & admdata$`VISTAT?`=="S",1,0)
+admdata$primSi<-ifelse((admdata$`TIP.VISITA`==100 | admdata$`TIP.VISITA`== 21) & admdata$`VISTAT?`=="S",1,0)
+
+admdata$videoAus<-ifelse(admdata$`TIP.VISITA`== 20 & admdata$`VISTAT?`=="N",1,0)
+admdata$telfAus<-ifelse((admdata$`TIP.VISITA`==50 | admdata$`TIP.VISITA`== 94)  & admdata$`VISTAT?`=="N",1,0)
+admdata$grupAus<-ifelse(admdata$TIP.VISITA==494 & admdata$`VISTAT?`=="N",1,0)
+admdata$succpresAus<-ifelse(admdata$`TIP.VISITA`==10 & admdata$`VISTAT?`=="N",1,0)
+admdata$primAus<-ifelse((admdata$`TIP.VISITA`==100 | admdata$`TIP.VISITA`== 21) & admdata$`VISTAT?`=="N",1,0)
+
+## De l'any anterior (2024)
+
+admdata_old<-readxl::read_excel(paste0(mainpath,"Perinatal/Memories/",any-1,"/Perinatal ",any-1,".xlsx"), sheet=2)
+
+admdata_old$video<-ifelse(admdata_old$`Tipus visita`== 20 ,1,0)
+admdata_old$telf<-ifelse(admdata_old$`Tipus visita`==50 | admdata_old$`Tipus visita`== 94,1,0)
+admdata_old$grup<-ifelse(admdata_old$`Tipus visita`==494,1,0)
+admdata_old$succpres<-ifelse(admdata_old$`Tipus visita`==10,1,0)
+admdata_old$prim<-ifelse(admdata_old$`Tipus visita`==100 | admdata_old$`Tipus visita`== 21,1,0)
+
+admdata_old$tipusvis<-ifelse(admdata_old$`Tipus visita`== 20,"Videoconsulta",
+                         ifelse(admdata_old$`Tipus visita`==50 | admdata_old$`Tipus visita`== 94,"telefònnica",
+                                ifelse(admdata_old$`Tipus visita`==494,"grupal",
+                                       ifelse(admdata_old$`Tipus visita`==10,"succ presen",
+                                              ifelse(admdata_old$`Tipus visita`==100 | admdata_old$`Tipus visita`== 21,"primera",0)))))
+```
+
+# Repàs circuit i programa
+
+## Breu presentació
+
+La unitat de salut mental perinatal de l'Hospital del Mar:
+
+-   Ofereix **Visites ambulatòries** en l'àmbit de: \
+-- CCEE \
+-- Grupals \
+-- i recentment domiciliàries \
+
+Àrea Litoral (Ciutat Vella, Sant Martí i La Mina)
+
+
+```{mermaid}
+%%| eval: false
+graph LR
+    %% Definición de los Doctores en un subgrafo para agruparlos
+    subgraph Psiq_Perinatal
+        A[Dr. Tal]
+        B[Dr. Cual]
+    end
+
+    %% Definición de los equipos
+    C[Coordinación con equipo T]
+    D[Coordinación equipo B]
+
+    %% Conexiones
+   Psiq_Perinatal --> C
+  Psiq_Perinatal --> D
+    C-->D
+
+    %% Estilos para que se vea profesional
+    style A fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style B fill:#f9f9f9,stroke:#333,stroke-width:2px
+    style C fill:#e1f5fe,stroke:#01579b
+    style D fill:#e8f5e9,stroke:#2e7d32
+```
+
+## Dispositius de la Xarxa {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+:::::: {#caja-doctores1 data-id="psiq" style="border: 2px solid #333; border-radius: 50px; position: absolute; top: 10%; left: 5%; box-shadow: 5 4px 8px rgba(0,0,0,0.1); background: LightBlue; padding: 10px;"}
+::::: columns
+::: {.column width="10%"}
+<br> ![](Monigote50perc.jpg){width="25"} ![](Monigote70perc.jpg){width="25"} ![](Monigote10perc.jpg){width="25"}
+:::
+
+::: {.column width="90%"}
+[**PSIQ PERINATAL**]{style="font-size: 1em; color: red;"} <br> [Dra. Malagon <br> Dr. Bergé <br> Psic T. Legido]{style="font-size: 0.8em;"}
+:::
+:::::
+::::::
+
+:::: {style="display: flex; justify-content: center; align-items: center; height: 500px; background-color: #f8f9fa;"}
+::: {#aro-vacio style="width: 500px; height: 500px; border-radius: 50%; border: 15px solid LightBlue; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); background-color: transparent;"}
+:::
+::::
+
+::: {#caja-doctores2 data-id="psic" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 10%; left: 55%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**ASSIR-Psicologia**]{style="font-size: 1em; color: red;"} <br> [- S.García (Vila O)\
+- M.de Gracia (CV i SMartí)\
+- A. Segura (La Mina)]{style="font-size: 0.8em;"}
+:::
+
+::: {#caja-doctores3 data-id="assir" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 55%; left: 15%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**ASSIR**]{style="font-size: 1em; color: red;"} <br> Llevadores
+:::
+
+::: {#caja-doctores4 data-id="hosp" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 60%; left: 55%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**HOSPITAL**]{style="font-size: 1em; color: red;"} <br> [OBST\
+**TS: C.Palès**]{style="font-size: 0.8em; "}
+:::
+
+::: {#caja-doctores5 data-id="csma" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 75%; left: 0%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**CSMAs**]{style="font-size: 1em; color: gray;"} <br>
+:::
+
+::: {#caja-doctores6 data-id="com" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 75%; left: 80%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**RECURSOS\
+COMUNITARIS**]{style="font-size: 0.8em; color: red;"}
+:::
+
+## Circuit {auto-animate="true" auto-animate-easing="ease-in-out"}
+
+::: {#caja-doctores1 data-id="psiq" style="border: 2px solid #333; border-radius: 50px; position: absolute; top: 70%; left: 40%; box-shadow: 5 4px 8px rgba(0,0,0,0.1); background: LightGreen; padding: 10px;"}
+[**PSIQ PERINATAL**]{style="font-size: 1em; color: red;"} <br>
+:::
+
+::: {#caja-doctores2 data-id="psic" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 30%; left: 40%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**ASSIR-Psicologia**]{style="font-size: 1em; color: red;"}
+:::
+
+::: {#caja-doctores3 data-id="assir" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 1%; left: 40%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**ASSIR**]{style="font-size: 1em; color: red;"} <br> Llevadores
+:::
+
+::: {#caja-doctores4 data-id="hosp" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 35%; left: 75%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**HOSPITAL**]{style="font-size: 1em; color: red;"} <br> [OBST\
+**TS: C.Palès**]{style="font-size: 0.8em;"}
+:::
+
+::: {#caja-doctores5 data-id="csma" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 35%; left: 0%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**CSMAs**]{style="font-size: 1em; color: gray;"} <br>
+:::
+
+::: {#caja-doctores6 data-id="com" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 75%; left: 80%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[**RECURSOS\
+COMUNITARIS**]{style="font-size: 0.8em; color: red;"}
+:::
+
+<svg style="position: absolute; width: 100%; height: 100%; pointer-events: none;">
+
+<line id="linea1" x1="550" y1="60" x2="550" y2="100" stroke="black" stroke-width="2" marker-end="url(#arrowhead)" /> <defs> <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"> <polygon points="0 0, 10 3.5, 0 7" /> </marker> </defs>
+
+</svg>
+
+<svg style="position: absolute; width: 100%; height: 100%; pointer-events: none;">
+
+<line id="linea1" x1="550" y1="210" x2="550" y2="380" stroke="black" stroke-width="2" marker-end="url(#arrowhead)" /> <defs> <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="0" refY="3.5" orient="auto"> <polygon points="0 0, 10 3.5, 0 7" /> </marker> </defs>
+
+</svg>
+
+::: {.fragment data-fragment-index="1" data-id="der" style="border: 2px solid #333; border-radius: 15px; position: absolute; top: 65%; left: 0%; box-shadow: 0 4px 8px rgba(0,0,0,0.1); background-color: AliceBlue; padding: 10px;"}
+[Derivacions:\
+- [psiperinatal\@hmar.cat](mailto:psiperinatal@hmar.cat)\
+- Derivació ordinària\
+- IS3]{style="font-size: 0.6em; color: gray;"}
+:::
+
+# Activitat en xifres
+
+## Primeres visites programades
+
+Programació: **`r tyear[tyear$Var1==any,"Freq"]` primeres visites (noves pacients)** en `r any`:\
+- Un `r round(tyear[tyear$Var1==any,"Freq"]/tyear[tyear$Var1==(any-1),"Freq"] -1,2) *100`% d'increment relatiu en relació a l'any anterior.
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(data=tyear[tyear$Var1!=(any+1),], aes(x=Var1, y=Freq)) +
+  geom_bar(stat="identity", fill="steelblue")+
+  geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Primeres visites")+
+  xlab("any")+
+  ylim(0,160)+
+  theme_minimal()
+```
+
+## Absències primeres visites
+
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Absència en **1ª instància**: `r (nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_1aprogr"]))` pacients, ( `r round((nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_1aprogr"]))/nrow(data[data$year==any,])*100,2)`% )
+:::
+
+::: {.column width="50%"}
+Absències **finals:** `r (nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_any"]))` pacients, (`r round((nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_any"]))/nrow(data[data$year==any,])*100,2)`%)
+:::
+
+::::
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+require(gridExtra)
+plot1<-ggplot(data=data, aes(fill=as.factor(acutvisita_1aprogr), x=as.factor(year))) +
+  geom_bar(position="fill")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Acut a primera visita")+
+  xlab("any")+
+  scale_fill_discrete(name="Acut 1er intent 1a visita", labels=c("no","sí"))+
+  scale_y_continuous(labels = percent )+
+  scale_x_discrete(labels=levels(as.factor(data$year)))+
+  theme(legend.position="top")
+
+plot2<-ggplot(data=data, aes(fill=as.factor(acutvisita_any), x=as.factor(year))) +
+  geom_bar(position="fill")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Acut a primera visita")+
+  xlab("any")+
+  scale_fill_discrete(name="Acut algun intent de 1a visita", labels=c("no","sí"))+
+  scale_y_continuous(labels = percent )+
+  scale_x_discrete(labels=levels(as.factor(data$year)))+
+  theme(legend.position="top")
+grid.arrange(plot1, plot2, ncol=2)
+
+# plot2<-ggplot(data=data, aes(fill=as.factor(acutvisita_any), x=as.factor(year))) +
+#   geom_bar(position="identity", alpha=0.6)+
+#   #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+#   ylab("Acut a primera visita")+
+#   xlab("any")+
+#   scale_fill_discrete(name="Acut algun intent de 1a visita", labels=c("no","sí"))+
+#   scale_y_continuous(labels = percent )+
+#   scale_x_discrete(labels=levels(as.factor(data$year)))+
+#   theme(legend.position="top")
+# grid.arrange(plot1, plot2, ncol=2)
+
+```
+
+## Visites successives
+
+[Programades: **`r sum(admdata$video+admdata$succpres+admdata$telf)` successives** ,   Efectuades: **`r sum(admdata$videoSi+admdata$succpresSi+admdata$telfSi)` successives**\
+- `r sum(admdata$videoSi)` per videotrucada ( `r round(sum(admdata$videoSi)*100/sum(admdata$videoSi+admdata$succpresSi+admdata$telfSi),1)` %).   Ratio succ / 1a = `r round(sum(admdata$videoSi+admdata$succpresSi+admdata$telfSi)/sum(data[data$year==any,"acutvisita_any"]),3)`.]{style="font-size: 0.6em;"}
+
+```{r echo=FALSE}
+# succ <- data.frame(tipus_vis=c('pres', 'vll', 'tlf','prim','grup','tot'),
+#                                                  num=c(699,211,263,129,189,1499))
+# 
+# onlysucc<-data.frame(tipus_vis=c('pres', 'vll', 'tlf','grup'),
+#                                                  num=c(699,211,263,189))
+# ggplot(onlysucc, aes(x=tipus_vis, y=num))+
+#   geom_bar(stat="identity")+
+#   ylab("Número")+
+#   xlab("Tipus de visita successiva")+
+#   scale_x_discrete(labels=c("grupals","presencials","Telf","Video"))
+# 
+# ggplot(onlysucc, aes(x=tipus_vis, y=num))+
+#   geom_bar(stat="identity")+
+#   ylab("Número")+
+#   xlab("Tipus de visita successiva")+
+#   scale_x_discrete(labels=c("grupals","presencials","Telf","Video"))
+
+perce<- admdata %>%
+  filter(tipusvis != "primera") %>%
+  count(tipusvis, `VISTAT?` ) %>%
+  group_by(tipusvis) %>%
+    mutate(pct = n / sum(n) * 100, 
+           etiqueta = paste0(round(pct, 1), "%" ))
+  
+
+perce_old<- admdata_old %>%
+  filter(tipusvis != "primera") %>%
+  count(tipusvis, `Visitat?` ) %>%
+  group_by(tipusvis) %>%
+    mutate(pct = n / sum(n) * 100, 
+           etiqueta = paste0(round(pct, 1), "%" ))
+
+plot3<-ggplot(data=perce, aes(fill=as.factor(`VISTAT?`), x=as.factor(tipusvis), y=n)) +
+  geom_bar(stat="identity", alpha=0.9) +
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Número total")+
+  xlab("tipus visita")+
+  scale_fill_discrete(name="Acut a la visita", labels=c("no","sí"))+
+  geom_text(aes(y=n,label= etiqueta), color="white", position = position_stack(vjust = 0.5)) +
+  #scale_y_continuous(labels = percent )+
+  scale_x_discrete(labels=levels(as.factor(perce$tipusvis)))+
+  guides(fill = guide_legend(override.aes = list(shape = NA)),
+         color = guide_legend(override.aes = list(linetype = 0))) +
+  theme(legend.position="top")
+
+
+#plot3+geom_point(data=perce[perce$`VISTAT?`=="S",], aes(fill=as.factor(`VISTAT?`), x=as.factor(tipusvis), stat="identity"))
+plot3+geom_point(data=perce_old[perce_old$`Visitat?`=="S",], aes(y = n, fill=as.factor(`Visitat?`) )) +
+  annotate("text", 
+           x = 2.1, # Un poco a la derecha de la primera barra
+           y = perce_old$n[3], 
+           label = " = Presentandes en any anterior", 
+           color = "black", fontface = "bold", hjust = 0) 
+
+```
+
+## Grups:
+
+**4 edicions de grups terapèutics**\
+`r nrow(unique(admdata[admdata$grup==1,"NHISTORIA"]))` pacients\
+`r sum(admdata$grupSi)` visites grupals efectuades.
+
+## Temps d'espera a 1a visita
+
+Any `r any`, temps d'espera mitjà **`r round(mean(data$date_dif_1a_visprogr, na.rm=TRUE),2)`** dies (SD: `r round(sd(data$date_dif_1a_visprogr, na.rm=TRUE),2)`). Per anys anteriors:
+
+```{r echo=FALSE, warning=FALSE}
+ggplot(data=data, aes(y=date_dif_1a_visprogr,x=as.factor(year), fill=year==any)) +
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(alpha=0.2)+
+    scale_fill_manual(values=c("gray","#69b3a2"))+
+    theme(legend.position="none")+
+
+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Dies d'espera")+
+  xlab("any")+
+  ylim(0,100)
+ #   scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+
+```
+
+## Procedència de les derivacions
+
+```{r echo=FALSE, warning=FALSE}
+
+
+
+p1<-ggplot(data=data[data$year==any,], aes(x=deriv_dd.factor)) +
+  geom_bar(position="identity", fill="lightblue")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("número")+
+  xlab("Dispositiu")+
+  coord_flip()+
+  labs(caption="Els punts són dades de l'any anterior")
+  
+
+  
+  p1+geom_point(data=data[data$year==(any-1),], aes(deriv_dd.factor), stat="count")
+
+       #    coord_flip()+
+
+
+
+```
+
+## Motiu de les derivacions
+
+```{r echo=FALSE, warning=FALSE}
+p2<-ggplot(data=data[data$year==any,], aes(x=motiu.factor)) +
+  geom_bar(position="identity", fill="lightblue")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("número")+
+  xlab("Dispositiu")+
+  coord_flip()+
+  labs(caption="Els punts són dades de l'any anterior")
+ #   scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+  p2+geom_point(data=data[data$year==(any-1),], aes(motiu.factor), stat="count")
+```
+
+# Característiques de les pacients:
+
+## Estat obstètric inicial
+
+```{r echo=FALSE, warning=FALSE}
+library(scales)
+ggplot(data=data[!is.na(data$est_obs_ini.factor),], aes(fill=est_obs_ini.factor, x=as.factor(year))) +
+  geom_bar(position="fill")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("%")+
+  xlab("any")+
+  scale_fill_discrete(name="Estat obstètric inicial")+ #, labels=c("no","sí"))+
+  scale_y_continuous(labels = percent )+
+  scale_x_discrete(labels=levels(as.factor(data$year)))
+```
+
+## Setmanes de gestació a la derivació
+
+De les emabarassades, la mitja en el moment de la derivació era de `r round(mean(data$gestdur_ini, na.rm=TRUE),2)` setmanes, (SD: `r round(sd(data$gestdur_ini, na.rm=TRUE),2)`).
+
+```{r echo=FALSE, warning=FALSE}
+means <- data %>%  
+  group_by(year) %>%  
+  dplyr::summarize(average = mean(gestdur_ini, by=year, na.rm=TRUE)) %>% 
+  ungroup() 
+
+ggplot(data=data, aes(y=gestdur_ini,x=as.factor(year), fill=year==any)) +
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(alpha=0.2)+
+    scale_fill_manual(values=c("gray","#69b3a2"))+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Setmanes gestació")+
+  xlab("any")+
+  theme(legend.position="none")+
+
+  geom_line(data = means, mapping = aes(x = as.factor(year), y = average, group=1),color="green")
+    #scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+
+```
+
+## Setmanes postpart a la derivació
+
+De les postpart, el promig de `r round(mean(data$postpart_ini, na.rm=TRUE),2)` setmanes, (SD: `r round(sd(data$postpart_ini, na.rm=TRUE),2)`)
+
+```{r echo=FALSE, warning=FALSE}
+library(tidyverse)
+means <- data %>%  
+  group_by(year) %>%  
+  dplyr::summarize(average = mean(postpart_ini, na.rm=TRUE)) %>% 
+  ungroup() 
+
+ggplot(data=data, aes(y=postpart_ini,x=as.factor(year), fill=year==any)) +
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(alpha=0.2)+
+    scale_fill_manual(values=c("gray","#69b3a2"))+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Setmanes postpart")+
+  xlab("any")+
+  theme(legend.position="none")+
+  ylim(0,60)+
+  geom_line(data = means, mapping = aes(x = as.factor(year), y = average, group=1),color="green")
+    #scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+
+```
+
+## Edat
+
+Promig de `r round(mean(data$edat_1avis, na.rm=TRUE),2)` anys, (SD: `r round(sd(data$edat_1avis, na.rm=TRUE),2)`)
+
+```{r echo=FALSE, warning=FALSE}
+library(tidyverse)
+means <- data %>%  
+  group_by(year) %>%  
+  dplyr::summarize(average = mean(edat_1avis, na.rm=TRUE)) %>% 
+  ungroup() 
+
+ggplot(data=data, aes(y=edat_1avis,x=as.factor(year), fill=year==any)) +
+  geom_boxplot(outlier.shape=NA)+
+  geom_jitter(alpha=0.2)+
+    scale_fill_manual(values=c("gray","#69b3a2"))+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("Edat")+
+  xlab("any")+
+  theme(legend.position="none")+
+  #ylim(0,0)+
+  geom_line(data = means, mapping = aes(x = as.factor(year), y = average, group=1),color="green")
+    #scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+
+```
+
+## Ètnia
+
+```{r echo=FALSE, warning=FALSE}
+p2<-ggplot(data=data[data$year==any,], aes(x=ethnicity.factor)) +
+  geom_bar(position="identity", fill="lightblue")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("número")+
+  xlab("Etnicitat")+
+  coord_flip()+
+  labs(caption="Els punts són dades de l'any anterior")
+ #   scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+  p2+geom_point(data=data[data$year==(any-1),], aes(ethnicity.factor), stat="count")
+```
+
+## Nivell educatiu
+
+```{r echo=FALSE, warning=FALSE}
+library(ggplot2)
+p2<-p2<-ggplot(data=data[data$year==any,], aes(x=niv_educ_part.factor)) +
+  geom_bar(position="identity", fill="lightblue")+
+  #geom_text(aes(label=Freq), vjust=-0.3, size=3.5)+
+  ylab("número")+
+  xlab("Nivell d'estudis")+
+  coord_flip()+
+  labs(caption="Els punts són dades de l'any anterior")
+ #   scale_fill_discrete(name="Acut 1a visita", labels=c("no","sí"))+
+  #scale_y_continuous(labels = percent )
+p2+geom_point(data=data[data$year==(any-1),], aes(niv_educ_part.factor), stat="count")
+
+```
+
+
+
+
+## NPS
+
+*"En una escala de 0 a 10,¿qué tan probable es que recomiende nuestros servicios sanitarios a un amigo o familiar?"*
+
+
+```{r}
+#| echo: false
+
+datanps <- readRDS("NPS/2025/meves_dades_nps.rds")
+
+
+
+#To calculate NPS
+
+library(dplyr)
+library(ggplot2)
+
+# Calculamos el NPS
+# nps_resultado <- datanps %>%
+#     mutate(categoria = case_when(
+#     nps >= 9 ~ "Promotor",
+#     nps <= 6 ~ "Detractor",
+#     TRUE ~ "Pasivo"
+#   )) %>%
+#     group_by(categoria) %>%
+#       dplyr::summarise(n = n()) %>%
+#         mutate(porcentaje = n / sum(n) * 100)
+nps_resultado <- datanps %>%
+  # 1. Treure files sense nota per evitar que el percentatge surti buit
+  filter(!is.na(nps)) %>% 
+  
+  # 2. Categoritzar
+  mutate(categoria = case_when(
+    nps >= 9 ~ "Promotor",
+    nps <= 6 ~ "Detractor",
+    TRUE ~ "Pasivo"
+  )) %>%
+  
+  # 3. Agrupar i comptar
+  group_by(categoria) %>%
+  dplyr::summarise(n = n(), .groups = "drop") %>% # .groups evita avisos de R
+  
+  # 4. Calcular percentatge (total sobre el que ha quedat)
+  mutate(porcentaje = n / sum(n) * 100)
+
+# Extraer el valor final
+nps_score <- nps_resultado$porcentaje[nps_resultado$categoria == "Promotor"] - 
+             nps_resultado$porcentaje[nps_resultado$categoria == "Detractor"]
+
+print(paste("NPS Score =", round(nps_score, 2)))
+
+ggplot(nps_resultado, aes(x = "", y = porcentaje, fill = categoria)) +
+  geom_bar(stat = "identity", width = 0.5) +
+  scale_fill_manual(values = c("Detractor" = "#E74C3C", "Pasivo" = "#F1C40F", "Promotor" = "#2ECC71")) +
+  labs(title = "Distribución de Categorías NPS", y = "Porcentaje", x = "") +
+  theme_minimal()
+
+
+
+```
+
+
+# Objectius any anterior: 2025
+
+## 1er objectiu: Disminuïr % No presentats en primeres visites
+
+## Estratègies per reduir absències 2025
+
+-   Fulletons per a difusió a ASSIR [Aquí](https://psmar-my.sharepoint.com/:b:/g/personal/dberge_hmar_cat/IQD_NnYaA-LsQ7mzdQX4W8AjAar8i0kqW4ZRxUjV9lPQdks?e=MCd7ad)\
+-   Reforç recordatori de la primera visita (Lourdes)\
+-   Continuació mesures prèvies que eren:\
+    Telf: cita directa ASSIR-programació Psiq
+
+## Resultats reduir absències 2025
+
+-   Absències primera instància  `r (nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_1aprogr"]))` , ( `r round((nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_1aprogr"]))/nrow(data[data$year==any,])*100,2)`% ).
+
+-   Absències finals `r (nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_any"]))` , (`r round((nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_any"]))/nrow(data[data$year==any,])*100,2)`%)
+
+-   En comparació amb l'any anterior:\
+    Any **`r any-1`** : Absències en primera instància `r round((nrow(data[data$year==any-1,])-sum(data[data$year==any-1,"acutvisita_1aprogr"]))/nrow(data[data$year==any-1,])*100,2)`%,\
+    Any **`r any-1`** : Absències finals `r round((nrow(data[data$year==any-1,])-sum(data[data$year==any-1,"acutvisita_any"]))/nrow(data[data$year==any-1,])*100,2)`%
+
+-   **Reducció en % absoluts del `r round((nrow(data[data$year==any-1,])-sum(data[data$year==any-1,"acutvisita_any"]))/nrow(data[data$year==any-1,])*100,2) - round((nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_any"]))/nrow(data[data$year==any,])*100,2)` %**\
+
+-   **Reducció en % relatius del `r round((round((nrow(data[data$year==any-1,])-sum(data[data$year==any-1,"acutvisita_any"]))/nrow(data[data$year==any-1,])*100,2) - round((nrow(data[data$year==any,])-sum(data[data$year==any,"acutvisita_any"]))/nrow(data[data$year==any,])*100,2)) / round((nrow(data[data$year==any-1,])-sum(data[data$year==any-1,"acutvisita_any"]))/nrow(data[data$year==any-1,])*100,2)*100,2)`%**
+
+## 2on Objectiu. Inici visites domiciliàries
+
+```{r message=FALSE, warning=FALSE, include=FALSE}
+## all scripts to load domi data
+#the csv file comes from report "Domicilios", which include all data regarding domicilios
+datad=read.csv(paste0(mainpath,"/Perinatal/outputs_redcap/PerinatalPsiquiatria-Domicilios_DATA_2026-01-21_1430.csv"))
+#Setting Labels
+library(Hmisc)
+label(datad$record_id_pd)="Record ID"
+label(datad$redcap_event_name)="Event Name"
+label(datad$redcap_repeat_instrument)="Repeat Instrument"
+label(datad$redcap_repeat_instance)="Repeat Instance"
+label(datad$data_part_exp)="Dies desde data de part (autocalculat)"
+label(datad$vis_conj___1)="Con qué acompañamiento se hace la visita? (choice=solo psiquiatra)"
+label(datad$vis_conj___2)="Con qué acompañamiento se hace la visita? (choice=con llevadora)"
+label(datad$vis_conj___3)="Con qué acompañamiento se hace la visita? (choice=con HAD)"
+label(datad$vis_conj___4)="Con qué acompañamiento se hace la visita? (choice=con PSI)"
+label(datad$vis_conj___5)="Con qué acompañamiento se hace la visita? (choice=con enfermero CSMA)"
+label(datad$vis_conj___6)="Con qué acompañamiento se hace la visita? (choice=otros)"
+label(datad$derivdomi)="Donde se deriva a  la paciente?"
+label(datad$fechvisdomi)="Fecha visita"
+#Setting Units
+
+
+#Setting Factors(will create new variable for factors)
+datad$redcap_event_name.factor = factor(datad$redcap_event_name,levels=c("socio_demo_arm_1","pregestant_arm_1","eval_gestant_18s_arm_1","eval_gestant_36s_arm_1","visites_domi_arm_1","eval_pospart_arm_1","socio_demo_arm_5","clinical_interrup_arm_5"))
+datad$redcap_repeat_instrument.factor = factor(datad$redcap_repeat_instrument,levels=c("visita_domicilio"))
+datad$vis_conj___1.factor = factor(datad$vis_conj___1,levels=c("0","1"))
+datad$vis_conj___2.factor = factor(datad$vis_conj___2,levels=c("0","1"))
+datad$vis_conj___3.factor = factor(datad$vis_conj___3,levels=c("0","1"))
+datad$vis_conj___4.factor = factor(datad$vis_conj___4,levels=c("0","1"))
+datad$vis_conj___5.factor = factor(datad$vis_conj___5,levels=c("0","1"))
+datad$vis_conj___6.factor = factor(datad$vis_conj___6,levels=c("0","1"))
+datad$derivdomi.factor = factor(datad$derivdomi,levels=c("1","2","3","4","5","6","7"))
+
+levels(datad$redcap_event_name.factor)=c("socio_demo (Arm 1: gestació)","Pregestant (Arm 1: gestació)","eval_gestant_18s (Arm 1: gestació)","eval_gestant_36s (Arm 1: gestació)","Visites_domi (Arm 1: gestació)","eval_pospart (Arm 1: gestació)","socio_demo (Arm 5: interrupció)","clinical_interrup (Arm 5: interrupció)")
+levels(datad$redcap_repeat_instrument.factor)=c("Visita_domicilio")
+levels(datad$vis_conj___1.factor)=c("Unchecked","Checked")
+levels(datad$vis_conj___2.factor)=c("Unchecked","Checked")
+levels(datad$vis_conj___3.factor)=c("Unchecked","Checked")
+levels(datad$vis_conj___4.factor)=c("Unchecked","Checked")
+levels(datad$vis_conj___5.factor)=c("Unchecked","Checked")
+levels(datad$vis_conj___6.factor)=c("Unchecked","Checked")
+levels(datad$derivdomi.factor)=c("visita presencial Psiq perinatal","visita videollamada Psiq perinatal","visita CSMA","visita en el CAP","Hospital de Dia Madre Bebé","nueva visita domiciliaria","otros")
+datad$year<-as.numeric(format(as.Date(datad$fechvisdomi), format="%Y"))
+```
+
+## Estratègies visites domiciliàries 2025
+
+-   Circuit de visites domiciliares
+
+<iframe src="V1_Domi_PsiqperinatalASSIR_24042025.pdf" width="1000px" height="500px">
+
+</iframe>
+
+## Resultats visites domiciliàries 2025
+
+n= `r nrow(datad[datad$year==any,])` visites; `r length(unique(datad$record_id_pd))` pacients, `r mean(datad[!duplicated(datad$record_id_pd),"data_part_exp"])` dies postpart promig
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# formem la base de dades amb la suma de amb qui eren les visites
+datadn<-data.frame(
+  # acomp = les categories
+  acomp=c(str_replace(str_split(label(datad$vis_conj___1),"=")[[1]][2],"\\)",""),
+          str_replace(str_split(label(datad$vis_conj___2),"=")[[1]][2],"\\)",""),
+          str_replace(str_split(label(datad$vis_conj___3),"=")[[1]][2],"\\)",""),
+          str_replace(str_split(label(datad$vis_conj___4),"=")[[1]][2],"\\)",""),
+          str_replace(str_split(label(datad$vis_conj___5),"=")[[1]][2],"\\)",""),
+          str_replace(str_split(label(datad$vis_conj___6),"=")[[1]][2],"\\)","")),
+  #ncont= els contatges
+  ncont=c(sum(datad$vis_conj___1),sum(datad$vis_conj___2),sum(datad$vis_conj___3),sum(datad$vis_conj___4),sum(datad$vis_conj___5),sum(datad$vis_conj___6))
+)
+ggplot(datadn, aes(x = acomp, y=ncont, fill=acomp))+
+  geom_col()+
+  theme(legend.position="none")+
+  labs(title="Acompanyant durant les visites domiciliàries", x="Acompanyant", y="Número visites", fill="")
+```
+
+## 3er Objectiu. Estructurar coordinació amb EAIAs
+
+Degut als canvis soferts a la DGAIA, actualment DGPPIA, no ha estat possible establir un circuit estable de reunions amb els serveis i dispositius afins.
+
+## 4rt Objectiu: Incrementar coordinació amb comunitària
+
+-   Presentació a CAP Ramón Turró
+-   Presentació a COPED (Pediatria)
